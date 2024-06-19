@@ -35,11 +35,7 @@ const addDrag = (box) => {
     });
     box.addEventListener("dblclick", (e) => {
         e.preventDefault();
-        const term = box.getAttribute("data-term");
-        document.querySelectorAll(".box").forEach((box) => {
-            if (box.getAttribute("data-term") == term) merge(box);
-        });
-
+        merge(box)
     });
 };
 
