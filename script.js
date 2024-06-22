@@ -42,22 +42,36 @@ const addDrag = (box) => {
 const combine = (overlapping) => {
     let params = {}
     for (let i = 0; i < overlapping.length; i++) {
-        let name = overlapping[i].getAttribute("data-term")
+        let name = overlapping[i].innerText
         if (!(name in params)) {
             params[name] = 1;
         }
         else params[name] += 1;
     }
-
-    // Temp for API
-    for(let key in params) {
-        if (params[key] !== water[key] || !(key in water)) return false;
+    fetch("http://0.0.0.0:8000/combine", {
+      method: "POST",
+      body: JSON.stringify({ "data": params
+      }),
+      headers: { "Content-Type": "application/json" }
+    })
+      .then((response) => response.json())
+      .then((json) => {
+          console.log(json['creates'])
+          if (!json['success']) return
+          for (let i = 0; i < overlapping.length; i++) {
+            if (i === 0) {
+                // Hardcoded as water for now
+                if (discover(json['creates']['equation'], json['creates']['name'])) overlapping[i].classList.add("discovered");
+                overlapping[i].setAttribute("data-term", json['creates']['equation']);
+                overlapping[i].innerText = json['creates']['equation'];
+            }
+            else {
+                overlapping[i].remove();
+            }
     }
-    for(let key in water) {
-        if (params[key] !== water[key] || !(key in params)) return false;
-    }
-    return true;
-
+          return json
+      });
+    return {}
 }
 
 const merge = (box) => {
@@ -77,18 +91,7 @@ const merge = (box) => {
             overlapping.push(other);
         }
     });
-    if (!combine(overlapping)) return false;
-    for (let i = 0; i < overlapping.length; i++) {
-        if (i === 0) {
-            // Hardcoded as water for now
-            if (discover("H₂O", "H₂O")) overlapping[i].classList.add("discovered");
-            overlapping[i].setAttribute("data-term", "H₂O");
-            overlapping[i].innerText = "H₂O";
-        }
-        else {
-            overlapping[i].remove();
-        }
-    }
+    combine(overlapping)
 };
 
 main.addEventListener("dragover", (e) => {
@@ -146,7 +149,8 @@ load();
 
 discover("H", "Hydrogen");
 discover("O", "Oxygen");
-
+discover("C", "Carbon");
+discover("N", "Nitrogen");
 /* search */
 
 sidebar.querySelector("input").addEventListener("keyup", (e) => {
